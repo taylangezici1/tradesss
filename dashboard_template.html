@@ -1,0 +1,455 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>TradingView Scanner — S&P 500 Buy Signals</title>
+<style>
+  :root {
+    --bg: #0d1117;
+    --bg-elev: #161b22;
+    --bg-elev2: #1f2630;
+    --border: #2a313c;
+    --text: #e6edf3;
+    --text-dim: #8b949e;
+    --green: #3fb950;
+    --green-bg: rgba(63,185,80,0.12);
+    --red: #f85149;
+    --red-bg: rgba(248,81,73,0.12);
+    --amber: #d29922;
+    --blue: #58a6ff;
+    --accent: #7c3aed;
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0;
+    background: var(--bg);
+    color: var(--text);
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto,
+      "Helvetica Neue", Arial, sans-serif;
+    font-size: 14px;
+    line-height: 1.4;
+  }
+  header {
+    padding: 20px 28px;
+    border-bottom: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    background: var(--bg-elev);
+  }
+  header h1 {
+    margin: 0;
+    font-size: 18px;
+    font-weight: 600;
+    letter-spacing: -0.01em;
+  }
+  header h1 .accent { color: var(--accent); }
+  .meta {
+    font-size: 12px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+  .meta b { color: var(--text); font-weight: 600; }
+
+  .tabs {
+    display: flex;
+    gap: 4px;
+    padding: 16px 28px 0 28px;
+    border-bottom: 1px solid var(--border);
+    background: var(--bg-elev);
+    overflow-x: auto;
+  }
+  .tab {
+    padding: 10px 16px;
+    background: transparent;
+    color: var(--text-dim);
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    white-space: nowrap;
+    transition: all 0.15s;
+  }
+  .tab:hover { color: var(--text); }
+  .tab.active {
+    color: var(--text);
+    border-bottom-color: var(--accent);
+  }
+  .tab .count {
+    margin-left: 6px;
+    padding: 2px 6px;
+    background: var(--bg-elev2);
+    border-radius: 10px;
+    font-size: 11px;
+    color: var(--text-dim);
+  }
+  .tab.active .count { background: var(--accent); color: white; }
+
+  .controls {
+    padding: 14px 28px;
+    display: flex;
+    gap: 12px;
+    align-items: center;
+    border-bottom: 1px solid var(--border);
+  }
+  .search {
+    flex: 1;
+    max-width: 320px;
+    padding: 7px 12px;
+    background: var(--bg-elev2);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    color: var(--text);
+    font-size: 13px;
+  }
+  .search:focus { outline: none; border-color: var(--accent); }
+  .strategy-desc {
+    flex: 1;
+    color: var(--text-dim);
+    font-size: 12px;
+    margin-left: 12px;
+  }
+
+  .panel { display: none; padding: 16px 28px 40px 28px; }
+  .panel.active { display: block; }
+
+  table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+  }
+  thead th {
+    text-align: left;
+    padding: 10px 12px;
+    background: var(--bg-elev);
+    color: var(--text-dim);
+    font-weight: 600;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    border-bottom: 1px solid var(--border);
+    cursor: pointer;
+    user-select: none;
+    white-space: nowrap;
+  }
+  thead th:hover { color: var(--text); }
+  thead th.sorted::after {
+    content: "↓";
+    margin-left: 4px;
+    color: var(--accent);
+  }
+  thead th.sorted.asc::after { content: "↑"; }
+  tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.1s;
+  }
+  tbody tr:hover { background: var(--bg-elev); }
+  tbody td {
+    padding: 10px 12px;
+    white-space: nowrap;
+  }
+  td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  td.ticker {
+    font-weight: 600;
+    color: var(--blue);
+  }
+  td.ticker a {
+    color: inherit;
+    text-decoration: none;
+  }
+  td.ticker a:hover { text-decoration: underline; }
+  td.name {
+    max-width: 280px;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    color: var(--text);
+  }
+  td.sector {
+    color: var(--text-dim);
+    font-size: 12px;
+  }
+  .pill {
+    display: inline-block;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-size: 11px;
+    font-weight: 600;
+  }
+  .pill.green { background: var(--green-bg); color: var(--green); }
+  .pill.red { background: var(--red-bg); color: var(--red); }
+  .pill.amber { background: rgba(210,153,34,0.12); color: var(--amber); }
+  .change-pos { color: var(--green); font-weight: 600; }
+  .change-neg { color: var(--red); font-weight: 600; }
+
+  .empty {
+    text-align: center;
+    padding: 40px;
+    color: var(--text-dim);
+    font-style: italic;
+  }
+  footer {
+    padding: 16px 28px;
+    color: var(--text-dim);
+    font-size: 11px;
+    border-top: 1px solid var(--border);
+    text-align: center;
+  }
+  footer a { color: var(--accent); text-decoration: none; }
+</style>
+</head>
+<body>
+
+<header>
+  <h1><span class="accent">▲</span> TradingView Scanner <span style="color:var(--text-dim);font-weight:400;">— S&amp;P 500 Buy Signals</span></h1>
+  <div class="meta">
+    Scanned <b id="universe">—</b> stocks &nbsp;·&nbsp; Updated <b id="generated">—</b>
+  </div>
+</header>
+
+<div class="tabs" id="tabs">
+  <button class="tab active" data-target="strong_buy">★ TV Strong Buy <span class="count" id="count-strong_buy">0</span></button>
+  <button class="tab" data-target="oversold">↓ Oversold Bounce <span class="count" id="count-oversold">0</span></button>
+  <button class="tab" data-target="breakout">↑ Momentum Breakout <span class="count" id="count-breakout">0</span></button>
+  <button class="tab" data-target="macd_cross">⇄ MACD Bullish Cross <span class="count" id="count-macd_cross">0</span></button>
+</div>
+
+<div class="controls">
+  <input type="text" id="search" class="search" placeholder="Filter by ticker, name, or sector..." />
+  <div class="strategy-desc" id="desc"></div>
+</div>
+
+<div id="panels"></div>
+
+<footer>
+  Data from TradingView's public scanner endpoint &nbsp;·&nbsp;
+  Not financial advice — do your own research before trading &nbsp;·&nbsp;
+  <a href="#" onclick="location.reload();return false;">Refresh page</a>
+</footer>
+
+<script>
+/*__DATA__*/
+
+const DESCRIPTIONS = {
+  strong_buy:  "TradingView's overall technical rating ≥ 0.5 (Strong Buy) — composite of 26 indicators across moving averages and oscillators on the 1D timeframe.",
+  oversold:    "RSI(14) below 30 on the daily — potential rebound candidates. Pair with a support level or fundamental conviction before acting.",
+  breakout:    "Price above EMA20 > SMA50 > SMA200 with a positive day. Ranked by trend strength × volume confirmation.",
+  macd_cross:  "MACD line above the signal line on the daily — momentum is shifting positive. Use spread size as relative strength.",
+};
+
+const STRATEGY_COLS = {
+  strong_buy:  ["ticker","name","sector","price","change","rating","ratingMA","ratingOsc","rsi","mcap"],
+  oversold:    ["ticker","name","sector","price","change","rsi","stochK","price52wLow","mcap"],
+  breakout:    ["ticker","name","sector","price","change","volRatio","emaGap","trend","rsi","mcap"],
+  macd_cross:  ["ticker","name","sector","price","change","macd","macdSig","spread","rsi","mcap"],
+};
+
+const COL_DEFS = {
+  ticker:      { label: "Ticker", numeric: false },
+  name:        { label: "Company", numeric: false },
+  sector:      { label: "Sector", numeric: false },
+  price:       { label: "Price", numeric: true, fmt: v => "$" + fmtNum(v, 2) },
+  change:      { label: "Day %", numeric: true, fmt: fmtChange },
+  rating:      { label: "TV Rating", numeric: true, fmt: fmtRating },
+  ratingMA:    { label: "MA Rating", numeric: true, fmt: fmtRating },
+  ratingOsc:   { label: "Osc. Rating", numeric: true, fmt: fmtRating },
+  rsi:         { label: "RSI(14)", numeric: true, fmt: fmtRSI },
+  stochK:      { label: "Stoch %K", numeric: true, fmt: v => fmtNum(v, 1) },
+  volRatio:    { label: "Vol vs 10d", numeric: true, fmt: v => v ? v.toFixed(2) + "×" : "—" },
+  emaGap:      { label: "% above EMA20", numeric: true, fmt: v => v ? v.toFixed(2) + "%" : "—" },
+  trend:       { label: "Trend (SMA stack)", numeric: false, fmt: v => v ? '<span class="pill green">' + v + '</span>' : "—" },
+  macd:        { label: "MACD", numeric: true, fmt: v => fmtNum(v, 3) },
+  macdSig:     { label: "Signal", numeric: true, fmt: v => fmtNum(v, 3) },
+  spread:      { label: "Spread", numeric: true, fmt: v => '<span class="change-pos">+' + fmtNum(v, 4) + '</span>' },
+  price52wLow: { label: "52w Low Δ", numeric: true, fmt: v => v ? '+' + v.toFixed(1) + "%" : "—" },
+  mcap:        { label: "Mkt Cap", numeric: true, fmt: fmtMcap },
+};
+
+function fmtNum(v, dec) {
+  if (v === null || v === undefined || isNaN(v)) return "—";
+  return Number(v).toLocaleString("en-US", {
+    minimumFractionDigits: dec, maximumFractionDigits: dec
+  });
+}
+function fmtChange(v) {
+  if (v === null || v === undefined) return "—";
+  const cls = v >= 0 ? "change-pos" : "change-neg";
+  const sign = v >= 0 ? "+" : "";
+  return `<span class="${cls}">${sign}${v.toFixed(2)}%</span>`;
+}
+function fmtRating(v) {
+  if (v === null || v === undefined) return "—";
+  let label, cls;
+  if (v >= 0.5)        { label = "Strong Buy"; cls = "green"; }
+  else if (v >= 0.1)   { label = "Buy"; cls = "green"; }
+  else if (v >= -0.1)  { label = "Neutral"; cls = "amber"; }
+  else if (v >= -0.5)  { label = "Sell"; cls = "red"; }
+  else                 { label = "Strong Sell"; cls = "red"; }
+  return `<span class="pill ${cls}">${label}</span> <span style="color:var(--text-dim);font-size:11px;">${v.toFixed(2)}</span>`;
+}
+function fmtRSI(v) {
+  if (v === null || v === undefined) return "—";
+  let cls = "amber";
+  if (v < 30) cls = "green";
+  else if (v > 70) cls = "red";
+  return `<span class="pill ${cls}">${v.toFixed(1)}</span>`;
+}
+function fmtMcap(v) {
+  if (!v) return "—";
+  if (v >= 1e12) return "$" + (v/1e12).toFixed(2) + "T";
+  if (v >= 1e9)  return "$" + (v/1e9).toFixed(1) + "B";
+  if (v >= 1e6)  return "$" + (v/1e6).toFixed(0) + "M";
+  return "$" + v.toFixed(0);
+}
+
+function rowData(s, strategy) {
+  const close = s.close;
+  const ema20 = s.EMA20;
+  const emaGap = (close && ema20) ? ((close - ema20) / ema20) * 100 : null;
+  const trend = (close > ema20 && ema20 > s.SMA50 && s.SMA50 > s.SMA200)
+    ? "Above all MAs" : null;
+  const price52wLow = (close && s.price_52_week_low)
+    ? ((close - s.price_52_week_low) / s.price_52_week_low) * 100 : null;
+
+  return {
+    ticker:      s.name,
+    tv_ticker:   s.tv_ticker,
+    name:        s.description || s.name,
+    sector:      s.sector || "—",
+    price:       s.close,
+    change:      s.change,
+    rating:      s["Recommend.All"],
+    ratingMA:    s["Recommend.MA"],
+    ratingOsc:   s["Recommend.Other"],
+    rsi:         s.RSI,
+    stochK:      s["Stoch.K"],
+    volRatio:    s._vol_ratio,
+    emaGap:      emaGap,
+    trend:       trend,
+    macd:        s["MACD.macd"],
+    macdSig:     s["MACD.signal"],
+    spread:      s._score_macd,
+    price52wLow: price52wLow,
+    mcap:        s.market_cap_basic,
+  };
+}
+
+const state = {
+  active: "strong_buy",
+  sort: { col: null, asc: false },
+  filter: "",
+};
+
+function render() {
+  const data = window.__SCAN_DATA__ || { strategies: {} };
+  document.getElementById("universe").textContent = data.universe_size || 0;
+  document.getElementById("generated").textContent = data.generated_at || "—";
+
+  for (const key of Object.keys(STRATEGY_COLS)) {
+    const list = (data.strategies && data.strategies[key]) || [];
+    document.getElementById("count-" + key).textContent = list.length;
+  }
+
+  document.getElementById("desc").textContent = DESCRIPTIONS[state.active];
+
+  const panels = document.getElementById("panels");
+  panels.innerHTML = "";
+
+  const stocks = (data.strategies && data.strategies[state.active]) || [];
+  const cols = STRATEGY_COLS[state.active];
+  const rows = stocks.map(s => rowData(s, state.active));
+
+  const filter = state.filter.trim().toLowerCase();
+  let filtered = filter
+    ? rows.filter(r =>
+        (r.ticker || "").toLowerCase().includes(filter) ||
+        (r.name || "").toLowerCase().includes(filter) ||
+        (r.sector || "").toLowerCase().includes(filter))
+    : rows;
+
+  if (state.sort.col) {
+    const c = state.sort.col;
+    const dir = state.sort.asc ? 1 : -1;
+    filtered = filtered.slice().sort((a, b) => {
+      const av = a[c], bv = b[c];
+      if (av === null || av === undefined) return 1;
+      if (bv === null || bv === undefined) return -1;
+      if (typeof av === "number") return (av - bv) * dir;
+      return String(av).localeCompare(String(bv)) * dir;
+    });
+  }
+
+  const panel = document.createElement("div");
+  panel.className = "panel active";
+
+  if (filtered.length === 0) {
+    panel.innerHTML = '<div class="empty">No matches for this strategy right now.</div>';
+    panels.appendChild(panel);
+    return;
+  }
+
+  let html = "<table><thead><tr>";
+  for (const c of cols) {
+    const def = COL_DEFS[c];
+    const sorted = state.sort.col === c;
+    const cls = "sortable" + (sorted ? " sorted" : "") + (sorted && state.sort.asc ? " asc" : "");
+    html += `<th class="${cls}" data-col="${c}" style="text-align:${def.numeric?'right':'left'}">${def.label}</th>`;
+  }
+  html += "</tr></thead><tbody>";
+
+  for (const r of filtered) {
+    html += "<tr>";
+    for (const c of cols) {
+      const def = COL_DEFS[c];
+      let val = r[c];
+      if (c === "ticker") {
+        const tv = r.tv_ticker || ("NASDAQ:" + r.ticker);
+        html += `<td class="ticker"><a href="https://www.tradingview.com/chart/?symbol=${encodeURIComponent(tv)}" target="_blank" rel="noopener">${r.ticker}</a></td>`;
+      } else if (c === "name") {
+        html += `<td class="name" title="${(r.name||'').replace(/"/g,'&quot;')}">${r.name}</td>`;
+      } else if (c === "sector") {
+        html += `<td class="sector">${r.sector}</td>`;
+      } else {
+        const formatted = def.fmt ? def.fmt(val) : (val ?? "—");
+        html += `<td class="${def.numeric ? 'num' : ''}">${formatted}</td>`;
+      }
+    }
+    html += "</tr>";
+  }
+  html += "</tbody></table>";
+  panel.innerHTML = html;
+  panels.appendChild(panel);
+
+  // attach sort handlers
+  panel.querySelectorAll("th[data-col]").forEach(th => {
+    th.addEventListener("click", () => {
+      const c = th.dataset.col;
+      if (state.sort.col === c) state.sort.asc = !state.sort.asc;
+      else { state.sort.col = c; state.sort.asc = false; }
+      render();
+    });
+  });
+}
+
+document.getElementById("tabs").addEventListener("click", e => {
+  if (e.target.classList.contains("tab") || e.target.closest(".tab")) {
+    const btn = e.target.closest(".tab");
+    document.querySelectorAll(".tab").forEach(t => t.classList.remove("active"));
+    btn.classList.add("active");
+    state.active = btn.dataset.target;
+    state.sort = { col: null, asc: false };
+    render();
+  }
+});
+
+document.getElementById("search").addEventListener("input", e => {
+  state.filter = e.target.value;
+  render();
+});
+
+render();
+</script>
+
+</body>
+</html>

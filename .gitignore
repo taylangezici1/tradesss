@@ -1,0 +1,32 @@
+# ============================================================
+# tradesss — root .gitignore
+# Nested dashboard/.gitignore handles Next.js-specific paths.
+# ============================================================
+
+# --- Python (scanner.py) ---
+__pycache__/
+*.py[cod]
+*.egg-info/
+.venv/
+venv/
+
+# --- Generated artifacts from scanner.py ---
+# scanner.py writes these on every run. Both contain real market data
+# pulled from TradingView at run time, not source. Regenerable.
+raw_data.json
+dashboard.html
+
+# --- Personal portfolio data (file-bridge artifacts) ---
+# The Postgres-backed dashboard writes per-symbol JSON to these folders.
+# Contents are personal trade/analysis history — never push to a public repo.
+dashboard/data/*.json
+dashboard/data/*.json.bak
+dashboard/data/analyses/*.json
+dashboard/data/analysis-queue/*.json
+
+# --- OS / editor noise ---
+.DS_Store
+Thumbs.db
+*.swp
+.idea/
+.vscode/
