@@ -1,10 +1,20 @@
-export type StrategyKey = "strong_buy" | "oversold" | "breakout" | "macd_cross";
+export type StrategyKey =
+  | "strong_buy"
+  | "oversold"
+  | "breakout"
+  | "macd_cross"
+  | "quality_oversold"
+  | "near_high"
+  | "mtf_buy";
 
 export const STRATEGY_LABELS: Record<StrategyKey, string> = {
   strong_buy: "TV Strong Buy",
   oversold: "Oversold Bounce",
   breakout: "Momentum Breakout",
   macd_cross: "MACD Bullish Cross",
+  quality_oversold: "Quality Oversold",
+  near_high: "52w High Momentum",
+  mtf_buy: "Daily+Weekly Strong Buy",
 };
 
 export const STRATEGY_DESC: Record<StrategyKey, string> = {
@@ -16,6 +26,12 @@ export const STRATEGY_DESC: Record<StrategyKey, string> = {
     "Price above EMA20 > SMA50 > SMA200 with a positive day. Ranked by trend strength × volume confirmation.",
   macd_cross:
     "MACD line above the signal line on the daily — momentum is shifting positive. Use spread size as relative strength.",
+  quality_oversold:
+    "RSI(14) below 40 while the long-term trend is still up (SMA50 > SMA200) — pullbacks inside healthy uptrends, filtering out falling knives. Ranked by how oversold.",
+  near_high:
+    "Price within 3% of its 52-week high with a positive day — the momentum/52w-high factor. Ranked by proximity to the high.",
+  mtf_buy:
+    "Both the daily and weekly TradingView ratings are Strong Buy (≥ 0.5) — multi-timeframe alignment for higher-conviction entries. Ranked by the average of the two ratings.",
 };
 
 export interface StockRow {
@@ -40,6 +56,7 @@ export interface StockRow {
   sma200: number | null;
   stochK: number | null;
   ratingAll: number | null;
+  ratingAll1W: number | null;   // weekly Recommend.All
   ratingMA: number | null;
   ratingOsc: number | null;
   adx: number | null;

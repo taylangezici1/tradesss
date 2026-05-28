@@ -112,7 +112,7 @@ DATABASE_URL=postgresql://postgres:1@localhost:5432/tradesss
 EOF
 
 yarn dev
-# → http://localhost:3000
+# → http://localhost:3131
 ```
 
 The schema is created lazily — there's no separate migration step for table layout.

@@ -222,6 +222,37 @@ const baseCols = (): Record<string, ColDef> => ({
         "—"
       ),
   },
+  pctFrom52wHigh: {
+    key: "pctFrom52wHigh",
+    label: "Δ from 52w high",
+    info: "pct_from_high52w",
+    numeric: true,
+    get: (s) => s.pctFrom52wHigh,
+    render: (s) =>
+      s.pctFrom52wHigh !== null && s.pctFrom52wHigh !== undefined ? (
+        <span className="text-ink">{s.pctFrom52wHigh.toFixed(1)}%</span>
+      ) : (
+        "—"
+      ),
+  },
+  ratingWeekly: {
+    key: "ratingWeekly",
+    label: "Weekly Rating",
+    numeric: true,
+    get: (s) => s.ratingAll1W,
+    render: (s) => {
+      const r = ratingLabel(s.ratingAll1W);
+      if (!r) return "—";
+      return (
+        <span className="inline-flex items-center gap-1.5">
+          <Pill tone={r.tone}>{r.label}</Pill>
+          <span className="text-xs text-ink-dim">
+            {(s.ratingAll1W ?? 0).toFixed(2)}
+          </span>
+        </span>
+      );
+    },
+  },
 });
 
 const STRATEGY_COLS: Record<StrategyKey, string[]> = {
@@ -229,6 +260,9 @@ const STRATEGY_COLS: Record<StrategyKey, string[]> = {
   oversold:   ["ticker", "name", "sector", "price", "change", "rsi", "stochK", "pctFrom52wLow", "mcap"],
   breakout:   ["ticker", "name", "sector", "price", "change", "volRatio", "emaGap", "rsi", "mcap"],
   macd_cross: ["ticker", "name", "sector", "price", "change", "macd", "macdSig", "macdSpread", "rsi", "mcap"],
+  quality_oversold: ["ticker", "name", "sector", "price", "change", "rsi", "stochK", "rating", "pctFrom52wLow", "mcap"],
+  near_high:  ["ticker", "name", "sector", "price", "change", "pctFrom52wHigh", "volRatio", "rsi", "mcap"],
+  mtf_buy:    ["ticker", "name", "sector", "price", "change", "rating", "ratingWeekly", "rsi", "mcap"],
 };
 
 export function StrategyTable({

@@ -49,7 +49,7 @@ export function Nav() {
     <nav className="sticky top-0 z-30 border-b border-edge bg-bg-elev/95 backdrop-blur">
       <div className="mx-auto flex max-w-7xl items-center justify-between px-6 py-3">
         <Link href="/" className="flex items-center gap-2 text-ink">
-          <span className="text-lg text-signal-accent">▲</span>
+          <img src="/icon.svg" alt="Logo" className="h-6 w-6" />
           <span className="font-semibold tracking-tight">tradesss</span>
           <span className="text-xs text-ink-dim">/ scanner</span>
         </Link>
@@ -63,22 +63,13 @@ export function Nav() {
           >
             Watchlist
           </NavLink>
-          <NavLink
-            href="/simulations"
-            icon={<Briefcase className="h-4 w-4" />}
-          >
+          <NavLink href="/simulations" icon={<Briefcase className="h-4 w-4" />}>
             Simulations
           </NavLink>
-          <NavLink
-            href="/time-sim"
-            icon={<Clock className="h-4 w-4" />}
-          >
+          <NavLink href="/time-sim" icon={<Clock className="h-4 w-4" />}>
             Time Sim
           </NavLink>
-          <NavLink
-            href="/analyses"
-            icon={<Sparkles className="h-4 w-4" />}
-          >
+          <NavLink href="/analyses" icon={<Sparkles className="h-4 w-4" />}>
             Analyses
           </NavLink>
           {queueCount > 0 && (

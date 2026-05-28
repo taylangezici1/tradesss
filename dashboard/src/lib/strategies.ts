@@ -28,6 +28,9 @@ export function classify(stocks: StockRow[]): ScanResult["strategies"] {
     oversold: [],
     breakout: [],
     macd_cross: [],
+    quality_oversold: [],
+    near_high: [],
+    mtf_buy: [],
   };
 
   for (const raw of stocks) {
@@ -62,6 +65,38 @@ export function classify(stocks: StockRow[]): ScanResult["strategies"] {
       s.macd > s.macdSignal
     ) {
       out.macd_cross.push({ ...s, score: s.macd - s.macdSignal });
+    }
+
+    // Quality Oversold: oversold-ish but the long-term trend is still up.
+    if (
+      s.rsi !== null &&
+      s.rsi < 40 &&
+      s.sma50 !== null &&
+      s.sma200 !== null &&
+      s.sma50 > s.sma200
+    ) {
+      out.quality_oversold.push({ ...s, score: 40 - s.rsi });
+    }
+
+    // 52-Week High Momentum: within 3% of the 52w high on a positive day.
+    if (
+      s.pctFrom52wHigh !== null &&
+      s.pctFrom52wHigh !== undefined &&
+      s.pctFrom52wHigh >= -3 &&
+      (s.change ?? 0) > 0
+    ) {
+      // Closer to the high (pctFrom52wHigh nearer 0) ranks higher.
+      out.near_high.push({ ...s, score: 100 + s.pctFrom52wHigh });
+    }
+
+    // Multi-timeframe: daily and weekly ratings both Strong Buy.
+    if (
+      s.ratingAll !== null &&
+      s.ratingAll1W !== null &&
+      s.ratingAll >= 0.5 &&
+      s.ratingAll1W >= 0.5
+    ) {
+      out.mtf_buy.push({ ...s, score: (s.ratingAll + s.ratingAll1W) / 2 });
     }
   }
 

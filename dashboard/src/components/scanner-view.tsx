@@ -1,7 +1,16 @@
 "use client";
 
 import { useEffect, useState } from "react";
-import { RefreshCw, Star, ArrowDown, ArrowUp, GitCompareArrows } from "lucide-react";
+import {
+  RefreshCw,
+  Star,
+  ArrowDown,
+  ArrowUp,
+  GitCompareArrows,
+  TrendingDown,
+  Trophy,
+  Layers,
+} from "lucide-react";
 import { StrategyTable } from "@/components/strategy-table";
 import { cn } from "@/lib/utils";
 import type { ScanResult, StrategyKey } from "@/lib/types";
@@ -12,6 +21,9 @@ const TAB_ICON: Record<StrategyKey, React.ReactNode> = {
   oversold: <ArrowDown className="h-3.5 w-3.5" />,
   breakout: <ArrowUp className="h-3.5 w-3.5" />,
   macd_cross: <GitCompareArrows className="h-3.5 w-3.5" />,
+  quality_oversold: <TrendingDown className="h-3.5 w-3.5" />,
+  near_high: <Trophy className="h-3.5 w-3.5" />,
+  mtf_buy: <Layers className="h-3.5 w-3.5" />,
 };
 
 interface ApiError {
@@ -60,7 +72,7 @@ export function ScannerView() {
           </h1>
           <p className="mt-1 text-sm text-ink-dim">
             Live technicals from TradingView&apos;s public scanner endpoint —
-            classified into four buy strategies.
+            classified into seven buy strategies.
           </p>
         </div>
         <div className="flex items-center gap-3 text-xs text-ink-dim">

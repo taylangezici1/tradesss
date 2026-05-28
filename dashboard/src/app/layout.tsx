@@ -8,6 +8,7 @@ export const metadata: Metadata = {
     template: "%s · tradesss",
   },
   description: "Personal stock scanner powered by TradingView's public data.",
+  icons: "/icon.svg",
 };
 
 export default function RootLayout({

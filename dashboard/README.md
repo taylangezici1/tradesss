@@ -18,7 +18,7 @@ cp .env.local.example .env.local   # add ANTHROPIC_API_KEY here (optional, only 
 npm run dev
 ```
 
-Then open http://localhost:3000.
+Then open http://localhost:3131.
 
 ### Anthropic API key (for AI analysis only)
 
